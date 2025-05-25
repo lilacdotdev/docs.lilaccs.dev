@@ -25,13 +25,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# env files
-.env*
-
-# vercel
-.vercel
-
-# apache
-.htaccess
-deploy.tar.gz

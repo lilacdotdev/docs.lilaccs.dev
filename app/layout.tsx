@@ -1,16 +1,15 @@
+import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { Suspense } from "react"
 import "./globals.css"
-import { Providers } from "@/components/providers"
-import { Sidebar } from "@/components/sidebar"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "LilacCS - Devlogs",
-  description: "Documentation and blog for lilaccs projects",
+  title: "docs.purple - Developer Blog",
+  description: "A futuristic developer blog by Purple",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -21,18 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>
-          <div className="flex min-h-screen">
-            <Suspense fallback={<div className="w-64 bg-background/50" />}>
-              <Sidebar />
-            </Suspense>
-            <main className="flex-1">
-              <Suspense fallback={<LoadingSpinner />}>
-                {children}
-              </Suspense>
-            </main>
-          </div>
-        </Providers>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

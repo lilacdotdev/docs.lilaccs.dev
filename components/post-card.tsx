@@ -10,64 +10,47 @@ interface Post {
   date: string
   tags: string[]
   image: string
-  slug: string
-  url?: string
 }
 
 interface PostCardProps {
   post: Post
-  onClick: (post: Post) => void
-  layout: "grid" | "list"
+  onClick?: () => void
 }
 
-export function PostCard({ post, onClick, layout }: PostCardProps) {
-  const isGrid = layout === "grid"
-
+export function PostCard({ post, onClick }: PostCardProps) {
   return (
-    <div
-      onClick={() => onClick(post)}
-      className={`group relative bg-background border border-foreground/20 rounded-xl overflow-hidden hover:border-foreground/40 transition-all duration-200 cursor-pointer hover-glow ${
-        isGrid ? "" : "flex"
-      }`}
+    <article
+      className="post-card p-6 border border-foreground/20 rounded-xl bg-background/50 backdrop-blur-sm cursor-pointer"
+      onClick={onClick}
     >
-      {/* Image */}
-      <div className={`relative ${
-        isGrid 
-          ? "w-full aspect-video" 
-          : "w-72 h-48 flex-shrink-0"
-      }`}>
-        <Image
-          src={post.image || "/placeholder.svg"}
-          alt={post.title}
-          fill
-          className="object-cover transition-transform duration-200 group-hover:scale-105"
-        />
-      </div>
+      <div className="flex gap-6">
+        <div className="flex-1">
+          <h2 className="text-xl font-bold mb-2 text-foreground">{post.title}</h2>
+          <p className="text-foreground/70 mb-4 leading-relaxed">{post.subtitle}</p>
 
-      {/* Content */}
-      <div className={`${isGrid ? "p-6" : "flex-1 p-6"}`}>
-        <h2 className="text-xl font-semibold mb-2 text-foreground">{post.title}</h2>
-        <p className="text-foreground/60 mb-4">{post.subtitle}</p>
-
-        {/* Meta */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-foreground/60">
+          <div className="flex items-center gap-2 mb-4 text-sm text-foreground/60">
             <Calendar className="w-4 h-4" />
-            <span className="text-sm">{post.date}</span>
+            {post.date}
           </div>
 
           <div className="flex flex-wrap gap-2">
             {post.tags.map((tag) => (
               <span
                 key={tag}
-                className="px-2 py-1 text-xs bg-foreground/10 text-foreground/60 rounded-full"
+                className="px-3 py-1 bg-foreground/10 text-foreground/80 rounded-full text-xs font-medium border border-foreground/20"
               >
                 {tag}
               </span>
             ))}
           </div>
         </div>
+
+        <div className="flex-shrink-0">
+          <div className="w-32 h-24 relative rounded-lg overflow-hidden border border-foreground/20">
+            <Image src={post.image || "/placeholder.svg"} alt={post.title} fill className="object-cover" />
+          </div>
+        </div>
       </div>
-    </div>
+    </article>
   )
 }

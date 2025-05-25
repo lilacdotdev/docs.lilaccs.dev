@@ -1,38 +1,42 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { Home, Mail, FileText, ChevronLeft, ChevronRight } from "lucide-react"
 
 const filters = ["Projects", "AI", "Machine Learning", "Web Dev", "Hardware", "Software", "Personal", "Other"]
 
 const links = [
-  { name: "Home", icon: Home, href: "https://lilaccs.dev" },
-  { name: "Contact", icon: Mail, href: "https://card.lilaccs.dev/" },
-  { name: "Resume", icon: FileText, href: "https://resume.lilaccs.dev/" },
+  { name: "Home", icon: Home, href: "/" },
+  { name: "Contact", icon: Mail, href: "/contact" },
+  { name: "Resume", icon: FileText, href: "/resume" },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  onFilterChange: (filter: string | null) => void
+}
+
+export function Sidebar({ onFilterChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
 
   const handleFilterClick = (filter: string) => {
-    const filterSlug = filter.toLowerCase().replace(/\s+/g, '-')
-    router.push(`/?filter=${filterSlug}`)
+    const filterSlug = filter.toLowerCase().replace(" ", "-")
+    router.push(`/${filterSlug}`)
+    onFilterChange(filter)
   }
 
   const handleAllPostsClick = () => {
     router.push("/")
+    onFilterChange(null)
   }
 
-  // Get current filter from search params
-  const currentFilter = searchParams.get('filter')?.replace(/-/g, ' ')
+  const currentFilter = pathname === "/" ? null : pathname.slice(1).replace("-", " ")
 
   return (
     <aside
-      className={`sticky top-0 h-screen bg-background border-r border-foreground/10 flex flex-col transition-all duration-300 ease-in-out z-20 ${
+      className={`sticky top-0 h-screen bg-background border-r border-foreground/10 flex flex-col transition-all duration-300 ease-in-out relative z-20 ${
         isCollapsed ? "w-16" : "w-80"
       }`}
     >
@@ -64,13 +68,13 @@ export function Sidebar() {
           <div className="w-full h-px bg-foreground/20 mb-6"></div>
 
           {/* Filters */}
-          <div className="mb-8 px-2">
+          <div className="mb-8">
             <h2 className="text-sm font-semibold mb-4 text-foreground/70">FILTERS</h2>
             <div className="space-y-2">
               <button
                 onClick={handleAllPostsClick}
                 className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 hover-glow ${
-                  !currentFilter && pathname === "/" ? "bg-foreground/10" : "hover:bg-foreground/5"
+                  !currentFilter ? "bg-foreground/10" : "hover:bg-foreground/5"
                 }`}
               >
                 All Posts
@@ -80,7 +84,7 @@ export function Sidebar() {
                   key={filter}
                   onClick={() => handleFilterClick(filter)}
                   className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 hover-glow ${
-                    currentFilter?.toLowerCase() === filter.toLowerCase() ? "bg-foreground/10" : "hover:bg-foreground/5"
+                    currentFilter === filter.toLowerCase() ? "bg-foreground/10" : "hover:bg-foreground/5"
                   }`}
                 >
                   {filter}
@@ -93,7 +97,7 @@ export function Sidebar() {
           <div className="w-full h-px bg-foreground/20 mb-6"></div>
 
           {/* Links */}
-          <div className="flex-1 px-2">
+          <div className="flex-1">
             <h2 className="text-sm font-semibold mb-4 text-foreground/70">LINKS</h2>
             <div className="space-y-2">
               {links.map((link) => (

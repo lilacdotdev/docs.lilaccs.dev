@@ -1,45 +1,37 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { signIn } from "next-auth/react"
-import { Eye, EyeOff, Lock, User } from "lucide-react"
-import { useRouter } from "next/navigation"
 
-export function AdminLogin() {
+import { useState } from "react"
+import { Eye, EyeOff, Lock, User } from "lucide-react"
+
+interface AdminLoginProps {
+  onLogin: (success: boolean) => void
+}
+
+export function AdminLogin({ onLogin }: AdminLoginProps) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
-    try {
-      const result = await signIn('credentials', {
-        username: username.trim(),
-        password: password.trim(),
-        redirect: false
-      })
+    // Simulate a brief loading delay for better UX
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-      if (result?.error) {
-        setError("Invalid credentials. Access denied!")
-      } else if (result?.ok) {
-        router.push("/adminedit")
-        router.refresh()
-        } else {
-          setError("Authentication failed. Please try again.")
-      }
-    } catch (error) {
-      console.error('Login error:', error)
-      setError("An error occurred. Please try again.")
-    } finally {
-      setIsLoading(false)
+    if (username === "admin" && password === "123") {
+      onLogin(true)
+    } else {
+      setError("Incorrect login. Shoo!")
+      onLogin(false)
     }
+
+    setIsLoading(false)
   }
 
   return (
@@ -71,7 +63,6 @@ export function AdminLogin() {
                   className="w-full pl-10 pr-4 py-3 bg-background/50 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter username"
                   required
-                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -91,13 +82,11 @@ export function AdminLogin() {
                   className="w-full pl-10 pr-12 py-3 bg-background/50 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter password"
                   required
-                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground/40 hover:text-foreground/60 transition-colors"
-                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -105,11 +94,7 @@ export function AdminLogin() {
             </div>
 
             {/* Error Message */}
-            {error && (
-              <div className="text-red-500 text-sm text-center font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-red-500 text-sm text-center font-medium">{error}</div>}
 
             {/* Submit Button */}
             <button
@@ -117,24 +102,12 @@ export function AdminLogin() {
               disabled={isLoading}
               className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Authenticating...
-                </span>
-              ) : (
-                "Login"
-              )}
+              {isLoading ? "Authenticating..." : "Login"}
             </button>
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center text-xs text-foreground/40">
-            Authorized personnel only • Secured with NextAuth.js
-          </div>
+          <div className="mt-6 text-center text-xs text-foreground/40">Authorized personnel only</div>
         </div>
       </div>
     </div>

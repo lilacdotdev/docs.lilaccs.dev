@@ -1,20 +1,19 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+"use client"
+
+import { useState } from "react"
 import { AdminLogin } from "@/components/admin-login"
 import { AdminDashboard } from "@/components/admin-dashboard"
-import { getAllPosts } from "@/lib/posts"
 
-export default async function AdminEditPage() {
-  const session = await getServerSession(authOptions)
+export default function AdminEditPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // If not authenticated, show login
-  if (!session) {
-    return <AdminLogin />
+  const handleLogin = (success: boolean) => {
+    setIsAuthenticated(success)
   }
 
-  // Get all posts for the admin dashboard
-  const posts = await getAllPosts()
-
-  // Show admin dashboard if authenticated
-  return <AdminDashboard initialPosts={posts} />
+  return (
+    <div className="min-h-screen bg-background">
+      {isAuthenticated ? <AdminDashboard /> : <AdminLogin onLogin={handleLogin} />}
+    </div>
+  )
 }

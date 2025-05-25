@@ -1,27 +1,10 @@
 "use client"
 
 import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
+import { useTheme } from "./theme-provider"
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
-    return (
-      <button 
-        className="relative p-3 rounded-full glass-effect hover-glow transition-all duration-300 group"
-        aria-label="Toggle theme"
-      >
-        <div className="relative w-6 h-6" />
-      </button>
-    )
-  }
 
   return (
     <button

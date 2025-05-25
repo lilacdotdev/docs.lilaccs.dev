@@ -3,9 +3,6 @@
 import Image from "next/image"
 import { Calendar, ArrowLeft } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
-import { MDXRemote } from "next-mdx-remote"
-import { mdxComponents } from "./mdx-components"
-import { useRouter } from "next/navigation"
 
 interface Post {
   id: string
@@ -14,36 +11,21 @@ interface Post {
   date: string
   tags: string[]
   image: string
-  content: any // MDX serialized content
-  slug: string
+  content: string
 }
 
 interface PostDetailProps {
   post: Post
+  onBack: () => void
 }
 
-export function PostDetail({ post }: PostDetailProps) {
-  const router = useRouter()
-
-  const handleBack = () => {
-    // Check if we came from a filtered view
-    const searchParams = new URLSearchParams(window.location.search)
-    const filter = searchParams.get('filter')
-    
-    if (filter) {
-      router.push(`/?filter=${filter}`)
-    } else {
-      router.push('/')
-    }
-  }
-
+export function PostDetail({ post, onBack }: PostDetailProps) {
   return (
-    <div className="p-8 pt-16">
     <div className="max-w-6xl mx-auto">
       {/* Header with back button and theme toggle */}
-        <div className="flex justify-between items-center mb-8 sticky top-0 bg-background/80 backdrop-blur-sm z-10 -mx-8 px-8 py-4">
+      <div className="flex justify-between items-center mb-8">
         <button
-            onClick={handleBack}
+          onClick={onBack}
           className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-foreground/5 transition-all duration-200 hover-glow"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -53,7 +35,7 @@ export function PostDetail({ post }: PostDetailProps) {
       </div>
 
       {/* Post header section */}
-        <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         {/* Left column - Post info */}
         <div className="lg:col-span-2 space-y-6">
           <h1 className="text-4xl font-bold text-foreground leading-tight">{post.title}</h1>
@@ -88,10 +70,12 @@ export function PostDetail({ post }: PostDetailProps) {
       {/* Horizontal divider */}
       <div className="w-full h-px bg-foreground/20 mb-8"></div>
 
-        {/* Main content */}
-        <article className="animate-fade-in max-w-4xl mx-auto prose prose-lg dark:prose-invert">
-          <MDXRemote {...post.content} components={mdxComponents} />
-        </article>
+      {/* Main content with proper heading and strong styling */}
+      <div className="prose prose-lg max-w-none">
+        <div
+          className="text-foreground/80 leading-relaxed space-y-6 [&_h1]:text-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_h4]:text-foreground [&_h5]:text-foreground [&_h6]:text-foreground [&_strong]:text-foreground [&_b]:text-foreground"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
       </div>
     </div>
   )
