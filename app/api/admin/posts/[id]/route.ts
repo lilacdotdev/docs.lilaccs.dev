@@ -5,8 +5,9 @@ import {
   updatePost, 
   deletePost, 
   validatePostData, 
-  sanitizeContent 
-} from '@/lib/post-management'
+  sanitizeContent,
+  initializeStorage
+} from '@/lib/storage'
 import { z } from 'zod'
 
 // Validation schema for updating posts
@@ -25,6 +26,9 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    // Initialize storage
+    await initializeStorage()
+    
     // Require authentication
     await requireAuth()
 
@@ -61,6 +65,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // Initialize storage
+    await initializeStorage()
+    
     // Require authentication
     await requireAuth()
 
@@ -133,6 +140,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // Initialize storage
+    await initializeStorage()
+    
     // Require authentication
     await requireAuth()
 

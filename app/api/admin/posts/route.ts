@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
-import { createPost, validatePostData, sanitizeContent } from '@/lib/post-management'
+import { createPost, initializeStorage, validatePostData, sanitizeContent } from '@/lib/storage'
 import { z } from 'zod'
 
 // Validation schema for creating posts
@@ -15,6 +15,9 @@ const createPostSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize storage
+    await initializeStorage()
+    
     // Require authentication
     await requireAuth()
 

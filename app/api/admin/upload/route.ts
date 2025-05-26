@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
-import { saveImage } from '@/lib/image-management'
+import { saveImage } from '@/lib/storage'
 
 export async function POST(request: NextRequest) {
   try {

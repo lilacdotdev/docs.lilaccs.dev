@@ -1,39 +1,23 @@
-import fs from 'fs'
-import path from 'path'
-import matter from 'gray-matter'
 import { Post, PostMetadata, PostFrontmatter, PostsResponse } from './types/post'
 import { tagMatchesSlug } from './utils'
-
-const postsDirectory = path.join(process.cwd(), 'content/posts')
+import { getAllPosts as getStoredPosts, getPostById, initializeStorage } from './storage'
 
 /**
  * Get all post metadata sorted by date (newest first)
  */
 export async function getAllPosts(): Promise<PostMetadata[]> {
-  // Ensure posts directory exists
-  if (!fs.existsSync(postsDirectory)) {
-    return []
-  }
-
-  const fileNames = fs.readdirSync(postsDirectory)
-  const allPostsData = fileNames
-    .filter((name) => name.endsWith('.mdx'))
-    .map((fileName) => {
-      const slug = fileName.replace(/\.mdx$/, '')
-      const fullPath = path.join(postsDirectory, fileName)
-      const fileContents = fs.readFileSync(fullPath, 'utf8')
-      const { data } = matter(fileContents)
-
-      return {
-        slug,
-        ...(data as PostFrontmatter),
-      }
-    })
-
-  // Sort posts by date (newest first)
-  return allPostsData.sort((a, b) => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime()
-  })
+  await initializeStorage()
+  const storedPosts = await getStoredPosts()
+  
+  return storedPosts.map(post => ({
+    slug: post.id,
+    title: post.title,
+    description: post.description,
+    date: post.date,
+    image: post.image,
+    tags: post.tags,
+    id: post.id,
+  }))
 }
 
 /**
@@ -73,30 +57,40 @@ export async function getPosts(
  */
 export async function getPost(tag: string, id: string): Promise<Post | null> {
   try {
-    const allPosts = await getAllPosts()
-    const postMetadata = allPosts.find(
-      (post) => 
-        post.id === id && 
-        post.tags.some((postTag) => tagMatchesSlug(postTag, tag))
-    )
+    await initializeStorage()
+    const storedPost = await getPostById(id)
 
-    if (!postMetadata) {
+    if (!storedPost) {
       return null
     }
 
-    const fullPath = path.join(postsDirectory, `${postMetadata.slug}.mdx`)
-    const fileContents = fs.readFileSync(fullPath, 'utf8')
-    const { data, content } = matter(fileContents)
+    // Check if the post has the matching tag
+    const hasMatchingTag = storedPost.tags.some((postTag) => tagMatchesSlug(postTag, tag))
+    if (!hasMatchingTag) {
+      return null
+    }
 
     // Simple content structure for React 19 compatibility
     const mdxSource = {
-      compiledSource: content,
-      frontmatter: data,
+      compiledSource: storedPost.content,
+      frontmatter: {
+        title: storedPost.title,
+        description: storedPost.description,
+        date: storedPost.date,
+        image: storedPost.image,
+        tags: storedPost.tags,
+        id: storedPost.id,
+      },
     }
 
     return {
-      ...(data as PostFrontmatter),
-      slug: postMetadata.slug,
+      title: storedPost.title,
+      description: storedPost.description,
+      date: storedPost.date,
+      image: storedPost.image,
+      tags: storedPost.tags,
+      id: storedPost.id,
+      slug: storedPost.id,
       content: mdxSource,
     }
   } catch (error) {
