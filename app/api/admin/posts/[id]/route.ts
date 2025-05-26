@@ -6,8 +6,8 @@ import {
   deletePost, 
   validatePostData, 
   sanitizeContent,
-  initializeStorage
-} from '@/lib/storage'
+  initializeDatabaseOperations
+} from '@/lib/database'
 import { z } from 'zod'
 
 // Validation schema for updating posts
@@ -26,26 +26,26 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    // Initialize storage
-    await initializeStorage()
+    // Initialize database
+    await initializeDatabaseOperations()
     
     // Require authentication
     await requireAuth()
 
     const { id } = await params
-    const post = await getPostById(id)
+    const result = await getPostById(id)
 
-    if (!post) {
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        post: result.data,
+      })
+    } else {
       return NextResponse.json(
-        { error: 'Post not found' },
+        { error: result.error },
         { status: 404 }
       )
     }
-
-    return NextResponse.json({
-      success: true,
-      post,
-    })
   } catch (err) {
     console.error('Get post error:', err)
     
@@ -65,8 +65,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    // Initialize storage
-    await initializeStorage()
+    // Initialize database
+    await initializeDatabaseOperations()
     
     // Require authentication
     await requireAuth()
@@ -89,17 +89,24 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Sanitize content if provided
-    const sanitizedContent = validatedData.content 
-      ? sanitizeContent(validatedData.content)
-      : undefined
+    if (validatedData.content) {
+      validatedData.content = sanitizeContent(validatedData.content)
+    }
 
     // Update post
-    const post = await updatePost(id, validatedData, sanitizedContent)
+    const result = await updatePost(id, validatedData)
 
-    return NextResponse.json({
-      success: true,
-      post,
-    })
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        post: result.data,
+      })
+    } else {
+      return NextResponse.json(
+        { error: result.error },
+        { status: result.error?.includes('not found') ? 404 : 400 }
+      )
+    }
   } catch (err) {
     console.error('Update post error:', err)
     
@@ -140,8 +147,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    // Initialize storage
-    await initializeStorage()
+    // Initialize database
+    await initializeDatabaseOperations()
     
     // Require authentication
     await requireAuth()
@@ -149,12 +156,19 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { id } = await params
     
     // Delete post
-    await deletePost(id)
+    const result = await deletePost(id)
 
-    return NextResponse.json({
-      success: true,
-      message: 'Post deleted successfully',
-    })
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        message: 'Post deleted successfully',
+      })
+    } else {
+      return NextResponse.json(
+        { error: result.error },
+        { status: 404 }
+      )
+    }
   } catch (err) {
     console.error('Delete post error:', err)
     

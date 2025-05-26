@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
-import { createPost, initializeStorage, validatePostData, sanitizeContent } from '@/lib/storage'
+import { 
+  createPost, 
+  initializeDatabaseOperations, 
+  validatePostData, 
+  sanitizeContent 
+} from '@/lib/database'
 import { z } from 'zod'
 
 // Validation schema for creating posts
@@ -15,8 +20,8 @@ const createPostSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Initialize storage
-    await initializeStorage()
+    // Initialize database
+    await initializeDatabaseOperations()
     
     // Require authentication
     await requireAuth()
@@ -38,22 +43,26 @@ export async function POST(request: NextRequest) {
     const sanitizedContent = sanitizeContent(validatedData.content)
 
     // Create post
-    const post = await createPost(
-      {
-        title: validatedData.title,
-        description: validatedData.description,
-        date: validatedData.date,
-        image: validatedData.image || '',
-        tags: validatedData.tags,
-        id: '', // Will be generated
-      },
-      sanitizedContent
-    )
-
-    return NextResponse.json({
-      success: true,
-      post,
+    const result = await createPost({
+      title: validatedData.title,
+      description: validatedData.description,
+      date: validatedData.date,
+      image: validatedData.image || '',
+      tags: validatedData.tags,
+      content: sanitizedContent,
     })
+
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        post: result.data,
+      })
+    } else {
+      return NextResponse.json(
+        { error: result.error },
+        { status: 400 }
+      )
+    }
   } catch (err) {
     console.error('Create post error:', err)
     

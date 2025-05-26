@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
-import { saveImage } from '@/lib/storage'
+import { saveImage, initializeDatabaseOperations } from '@/lib/database'
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize database
+    await initializeDatabaseOperations()
+    
     // Require authentication
     await requireAuth()
 
@@ -19,12 +22,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Save image
-    const imageUrl = await saveImage(file)
+    const result = await saveImage(file)
 
-    return NextResponse.json({
-      success: true,
-      imageUrl,
-    })
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        imageUrl: result.data,
+      })
+    } else {
+      return NextResponse.json(
+        { error: result.error },
+        { status: 400 }
+      )
+    }
   } catch (err) {
     console.error('Image upload error:', err)
     

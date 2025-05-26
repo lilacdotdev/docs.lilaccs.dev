@@ -1,15 +1,20 @@
 import { Post, PostMetadata, PostFrontmatter, PostsResponse } from './types/post'
+import { PostDocument } from './types/database'
 import { tagMatchesSlug } from './utils'
-import { getAllPosts as getStoredPosts, getPostById, initializeStorage } from './storage'
+import { getPosts as getStoredPosts, getPostById, getAllTags as getStoredTags, initializeDatabaseOperations } from './database'
 
 /**
  * Get all post metadata sorted by date (newest first)
  */
 export async function getAllPosts(): Promise<PostMetadata[]> {
-  await initializeStorage()
-  const storedPosts = await getStoredPosts()
+  await initializeDatabaseOperations()
+  const result = await getStoredPosts()
   
-  return storedPosts.map(post => ({
+  if (!result.success || !result.data) {
+    return []
+  }
+  
+  return result.data.posts.map(post => ({
     slug: post.id,
     title: post.title,
     description: post.description,
@@ -28,27 +33,31 @@ export async function getPosts(
   limit: number = 12,
   tag?: string
 ): Promise<PostsResponse> {
-  const allPosts = await getAllPosts()
+  await initializeDatabaseOperations()
+  const result = await getStoredPosts({ page, limit, tag })
   
-  // Filter by tag if provided
-  const filteredPosts = tag
-    ? allPosts.filter((post) =>
-        post.tags.some((postTag) => 
-          postTag.toLowerCase() === tag.toLowerCase()
-        )
-      )
-    : allPosts
-
-  const total = filteredPosts.length
-  const startIndex = (page - 1) * limit
-  const endIndex = startIndex + limit
-  const posts = filteredPosts.slice(startIndex, endIndex)
-  const hasMore = endIndex < total
+  if (!result.success || !result.data) {
+    return {
+      posts: [],
+      hasMore: false,
+      total: 0,
+    }
+  }
+  
+  const posts = result.data.posts.map(post => ({
+    slug: post.id,
+    title: post.title,
+    description: post.description,
+    date: post.date,
+    image: post.image,
+    tags: post.tags,
+    id: post.id,
+  }))
 
   return {
     posts,
-    hasMore,
-    total,
+    hasMore: result.data.hasMore,
+    total: result.data.total,
   }
 }
 
@@ -57,12 +66,14 @@ export async function getPosts(
  */
 export async function getPost(tag: string, id: string): Promise<Post | null> {
   try {
-    await initializeStorage()
-    const storedPost = await getPostById(id)
+    await initializeDatabaseOperations()
+    const result = await getPostById(id)
 
-    if (!storedPost) {
+    if (!result.success || !result.data) {
       return null
     }
+
+    const storedPost = result.data
 
     // Check if the post has the matching tag
     const hasMatchingTag = storedPost.tags.some((postTag) => tagMatchesSlug(postTag, tag))
@@ -103,14 +114,14 @@ export async function getPost(tag: string, id: string): Promise<Post | null> {
  * Get all unique tags from all posts
  */
 export async function getAllTags(): Promise<string[]> {
-  const allPosts = await getAllPosts()
-  const tagSet = new Set<string>()
+  await initializeDatabaseOperations()
+  const result = await getStoredTags()
   
-  allPosts.forEach((post) => {
-    post.tags.forEach((tag) => tagSet.add(tag))
-  })
+  if (!result.success || !result.data) {
+    return []
+  }
   
-  return Array.from(tagSet).sort()
+  return result.data
 }
 
 /**
