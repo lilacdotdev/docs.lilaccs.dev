@@ -2,7 +2,6 @@
 
 import { ErrorBoundary } from 'react-error-boundary'
 import { ContentLayout } from './layout/content-layout'
-import { mdxComponents } from './mdx-components'
 import { LoadingDots } from '../ui/loading-dots'
 
 interface MDXRendererProps {

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MDXRenderer } from '../mdx-renderer'
-import { serialize } from 'next-mdx-remote/serialize'
 
 // Mock next-themes
 vi.mock('next-themes', () => ({
@@ -25,8 +24,8 @@ describe('MDXRenderer', () => {
     expect(screen.getByText('Loading content...')).toBeDefined()
   })
 
-  it('should render MDX content', async () => {
-    const mdxSource = await serialize('# Hello World\n\nThis is a test.')
+  it('should render MDX content', () => {
+    const mdxSource = { compiledSource: '# Hello World\n\nThis is a test.' }
     render(<MDXRenderer source={mdxSource} />)
     
     expect(screen.getByText('Hello World')).toBeDefined()
@@ -46,8 +45,8 @@ describe('MDXRenderer', () => {
     consoleSpy.mockRestore()
   })
 
-  it('should render with custom components', async () => {
-    const mdxSource = await serialize('```javascript\nconsole.log("test")\n```')
+  it('should render with custom components', () => {
+    const mdxSource = { compiledSource: '```javascript\nconsole.log("test")\n```' }
     render(<MDXRenderer source={mdxSource} />)
     
     // Should render code content
