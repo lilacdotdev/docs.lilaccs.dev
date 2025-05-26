@@ -2,7 +2,7 @@
 
 A modern, minimalist blog documentation platform built with Next.js 14, featuring a futuristic black and white design aesthetic and comprehensive content management capabilities.
 
-## 🚀 Live Demo
+## 🚀 Live Site
 
 Visit the live site: [docs.lilaccs.dev](https://docs.lilaccs.dev)
 
