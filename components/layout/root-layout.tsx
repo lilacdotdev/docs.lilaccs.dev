@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { Sidebar } from '@/components/sidebar/sidebar'
@@ -9,7 +10,7 @@ interface RootLayoutProps {
   children: React.ReactNode
 }
 
-export function RootLayout({ children }: RootLayoutProps) {
+function RootLayoutContent({ children }: RootLayoutProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const key = pathname + searchParams.toString()
@@ -19,7 +20,9 @@ export function RootLayout({ children }: RootLayoutProps) {
     <div className="flex min-h-screen">
       {/* Fixed Sidebar */}
       <div className="fixed left-0 top-0 h-screen z-40">
-        <Sidebar />
+        <Suspense fallback={<div className="w-16 h-screen bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800" />}>
+          <Sidebar />
+        </Suspense>
       </div>
       
       {/* Main Content with dynamic left margin based on sidebar state */}
@@ -43,5 +46,20 @@ export function RootLayout({ children }: RootLayoutProps) {
         </AnimatePresence>
       </motion.div>
     </div>
+  )
+}
+
+export function RootLayout({ children }: RootLayoutProps) {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen">
+        <div className="w-16 h-screen bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800" />
+        <div className="flex-1 ml-16">
+          {children}
+        </div>
+      </div>
+    }>
+      <RootLayoutContent>{children}</RootLayoutContent>
+    </Suspense>
   )
 } 

@@ -1,5 +1,3 @@
-import { MDXRemoteSerializeResult } from 'next-mdx-remote'
-
 export interface PostFrontmatter {
   title: string
   description: string
@@ -10,7 +8,10 @@ export interface PostFrontmatter {
 }
 
 export interface Post extends PostFrontmatter {
-  content: MDXRemoteSerializeResult
+  content: {
+    compiledSource: string
+    frontmatter?: Record<string, any>
+  }
   slug: string
 }
 

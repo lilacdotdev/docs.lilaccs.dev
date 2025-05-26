@@ -1,9 +1,6 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
-import { serialize } from 'next-mdx-remote/serialize'
-import rehypeHighlight from 'rehype-highlight'
-import remarkGfm from 'remark-gfm'
 import { Post, PostMetadata, PostFrontmatter, PostsResponse } from './types/post'
 import { tagMatchesSlug } from './utils'
 
@@ -91,12 +88,11 @@ export async function getPost(tag: string, id: string): Promise<Post | null> {
     const fileContents = fs.readFileSync(fullPath, 'utf8')
     const { data, content } = matter(fileContents)
 
-    const mdxSource = await serialize(content, {
-      mdxOptions: {
-        remarkPlugins: [remarkGfm],
-        rehypePlugins: [rehypeHighlight],
-      },
-    })
+    // Simple content structure for React 19 compatibility
+    const mdxSource = {
+      compiledSource: content,
+      frontmatter: data,
+    }
 
     return {
       ...(data as PostFrontmatter),

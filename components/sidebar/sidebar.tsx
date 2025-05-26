@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
@@ -38,7 +38,7 @@ const links = [
   { name: 'Resume', icon: FileText, href: 'https://resume.lilaccs.dev' },
 ]
 
-export function Sidebar() {
+function SidebarContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeFilter, setActiveFilter] = useState(searchParams.get('filter') || 'All Posts')
@@ -198,7 +198,7 @@ export function Sidebar() {
 
         {/* Collapsed Link Icons */}
         {isCollapsed && (
-          <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center space-y-4 py-4">
             {links.map((link) => (
               <Tooltip.Provider key={link.name}>
                 <Tooltip.Root>
@@ -227,12 +227,32 @@ export function Sidebar() {
             ))}
           </div>
         )}
+      </div>
 
-        {/* Theme Toggle */}
-        <div className="mt-4 flex justify-end">
+      {/* Theme Toggle */}
+      <div className="mb-4">
+        <motion.div
+          animate={{ opacity: isCollapsed ? 0 : 1 }}
+          className={cn('px-2', isCollapsed && 'hidden')}
+        >
           <ThemeToggle />
-        </div>
+        </motion.div>
+        {isCollapsed && (
+          <div className="flex justify-center">
+            <ThemeToggle />
+          </div>
+        )}
       </div>
     </motion.aside>
+  )
+}
+
+export function Sidebar() {
+  return (
+    <Suspense fallback={
+      <div className="w-16 h-screen bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800" />
+    }>
+      <SidebarContent />
+    </Suspense>
   )
 } 
