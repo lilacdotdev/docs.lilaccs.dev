@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { PostImage } from './post-image'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
+import { tagToSlug } from '@/lib/utils'
 
 interface PostCardProps {
   post: {
@@ -23,7 +24,7 @@ export function PostCard({ post }: PostCardProps) {
       whileHover={{ y: -4 }}
       className="group relative flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md"
     >
-      <Link href={`/${post.tags[0]}/${post.id}`} className="flex-1">
+      <Link href={`/${tagToSlug(post.tags[0])}/${post.id}`} className="flex-1">
         <PostImage src={post.image} alt={post.title} />
         <div className="flex flex-col space-y-1.5 p-4">
           <h3 className="line-clamp-2 text-lg font-semibold">{post.title}</h3>

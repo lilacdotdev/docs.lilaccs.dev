@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { PostImage } from './post-image'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
+import { tagToSlug } from '@/lib/utils'
 
 interface PostRowProps {
   post: {
@@ -24,7 +25,7 @@ export function PostRow({ post }: PostRowProps) {
       className="group relative flex overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md"
     >
       <Link
-        href={`/${post.tags[0]}/${post.id}`}
+        href={`/${tagToSlug(post.tags[0])}/${post.id}`}
         className="flex flex-1 items-center gap-4 p-4 sm:gap-6"
       >
         <div className="w-24 flex-none sm:w-36 md:w-48">

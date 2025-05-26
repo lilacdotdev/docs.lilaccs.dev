@@ -1,61 +1,144 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
-import { Post, PostMetadata } from '@/types/post'
+import { serialize } from 'next-mdx-remote/serialize'
+import rehypeHighlight from 'rehype-highlight'
+import remarkGfm from 'remark-gfm'
+import { Post, PostMetadata, PostFrontmatter, PostsResponse } from './types/post'
+import { tagMatchesSlug } from './utils'
 
-const postsDirectory = path.join(process.cwd(), 'posts')
+const postsDirectory = path.join(process.cwd(), 'content/posts')
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
+/**
+ * Get all post metadata sorted by date (newest first)
+ */
+export async function getAllPosts(): Promise<PostMetadata[]> {
+  // Ensure posts directory exists
+  if (!fs.existsSync(postsDirectory)) {
+    return []
+  }
+
+  const fileNames = fs.readdirSync(postsDirectory)
+  const allPostsData = fileNames
+    .filter((name) => name.endsWith('.mdx'))
+    .map((fileName) => {
+      const slug = fileName.replace(/\.mdx$/, '')
+      const fullPath = path.join(postsDirectory, fileName)
+      const fileContents = fs.readFileSync(fullPath, 'utf8')
+      const { data } = matter(fileContents)
+
+      return {
+        slug,
+        ...(data as PostFrontmatter),
+      }
+    })
+
+  // Sort posts by date (newest first)
+  return allPostsData.sort((a, b) => {
+    return new Date(b.date).getTime() - new Date(a.date).getTime()
+  })
+}
+
+/**
+ * Get posts with pagination and filtering
+ */
+export async function getPosts(
+  page: number = 1,
+  limit: number = 12,
+  tag?: string
+): Promise<PostsResponse> {
+  const allPosts = await getAllPosts()
+  
+  // Filter by tag if provided
+  const filteredPosts = tag
+    ? allPosts.filter((post) =>
+        post.tags.some((postTag) => 
+          postTag.toLowerCase() === tag.toLowerCase()
+        )
+      )
+    : allPosts
+
+  const total = filteredPosts.length
+  const startIndex = (page - 1) * limit
+  const endIndex = startIndex + limit
+  const posts = filteredPosts.slice(startIndex, endIndex)
+  const hasMore = endIndex < total
+
+  return {
+    posts,
+    hasMore,
+    total,
+  }
+}
+
+/**
+ * Get a single post by tag and id
+ */
+export async function getPost(tag: string, id: string): Promise<Post | null> {
   try {
-    const fullPath = path.join(postsDirectory, `${slug}.mdx`)
+    const allPosts = await getAllPosts()
+    const postMetadata = allPosts.find(
+      (post) => 
+        post.id === id && 
+        post.tags.some((postTag) => tagMatchesSlug(postTag, tag))
+    )
+
+    if (!postMetadata) {
+      return null
+    }
+
+    const fullPath = path.join(postsDirectory, `${postMetadata.slug}.mdx`)
     const fileContents = fs.readFileSync(fullPath, 'utf8')
     const { data, content } = matter(fileContents)
 
+    const mdxSource = await serialize(content, {
+      mdxOptions: {
+        remarkPlugins: [remarkGfm],
+        rehypePlugins: [rehypeHighlight],
+      },
+    })
+
     return {
-      id: slug,
-      title: data.title,
-      description: data.description,
-      date: data.date,
-      tags: data.tags || [],
-      content,
+      ...(data as PostFrontmatter),
+      slug: postMetadata.slug,
+      content: mdxSource,
     }
   } catch (error) {
-    console.error(`Error loading post ${slug}:`, error)
+    console.error('Error loading post:', error)
     return null
   }
 }
 
-export async function getAllPosts(): Promise<PostMetadata[]> {
-  try {
-    const slugs = fs.readdirSync(postsDirectory)
-      .filter((slug) => slug.endsWith('.mdx'))
-      .map((slug) => slug.replace(/\.mdx$/, ''))
-
-    const posts = await Promise.all(
-      slugs.map(async (slug) => {
-        const post = await getPostBySlug(slug)
-        if (!post) return null
-
-        return {
-          id: post.id,
-          title: post.title,
-          description: post.description,
-          date: post.date,
-          tags: post.tags,
-        }
-      })
-    )
-
-    return posts
-      .filter((post): post is PostMetadata => post !== null)
-      .sort((a, b) => (new Date(b.date).getTime() - new Date(a.date).getTime()))
-  } catch (error) {
-    console.error('Error loading posts:', error)
-    return []
-  }
+/**
+ * Get all unique tags from all posts
+ */
+export async function getAllTags(): Promise<string[]> {
+  const allPosts = await getAllPosts()
+  const tagSet = new Set<string>()
+  
+  allPosts.forEach((post) => {
+    post.tags.forEach((tag) => tagSet.add(tag))
+  })
+  
+  return Array.from(tagSet).sort()
 }
 
-export async function getPostsByTag(tag: string): Promise<PostMetadata[]> {
+/**
+ * Search posts by title, description, or content
+ */
+export async function searchPosts(query: string): Promise<PostMetadata[]> {
+  if (!query.trim()) {
+    return []
+  }
+
   const allPosts = await getAllPosts()
-  return allPosts.filter((post) => post.tags.includes(tag))
+  const searchTerm = query.toLowerCase()
+
+  return allPosts.filter((post) => {
+    return (
+      post.title.toLowerCase().includes(searchTerm) ||
+      post.description.toLowerCase().includes(searchTerm) ||
+      post.tags.some((tag) => tag.toLowerCase().includes(searchTerm))
+    )
+  })
 } 
