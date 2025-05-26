@@ -1,6 +1,7 @@
 import createMDX from '@next/mdx'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import path from 'path'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -19,6 +20,17 @@ const nextConfig = {
   },
   // Configure output for standalone deployment
   output: 'standalone',
+  // Add webpack configuration for path aliases
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(process.cwd()),
+      '@/components': path.resolve(process.cwd(), 'components'),
+      '@/lib': path.resolve(process.cwd(), 'lib'),
+      '@/app': path.resolve(process.cwd(), 'app'),
+    }
+    return config
+  },
   // Optionally, add any other Next.js config below
 }
 
