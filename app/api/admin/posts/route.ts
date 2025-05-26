@@ -68,20 +68,45 @@ export async function POST(request: NextRequest) {
     
     if (err instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: err.errors },
+        { 
+          error: 'Invalid input data', 
+          details: err.errors,
+          message: 'Request body validation failed'
+        },
         { status: 400 }
       )
     }
 
     if (err instanceof Error) {
+      // Check for specific MongoDB errors
+      if (err.message.includes('duplicate key')) {
+        return NextResponse.json(
+          { error: 'A post with this title already exists' },
+          { status: 409 }
+        )
+      }
+      
+      if (err.message.includes('connection')) {
+        return NextResponse.json(
+          { error: 'Database connection error' },
+          { status: 503 }
+        )
+      }
+      
       return NextResponse.json(
-        { error: err.message },
+        { 
+          error: err.message,
+          type: 'application_error'
+        },
         { status: 400 }
       )
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        type: 'unknown_error'
+      },
       { status: 500 }
     )
   }

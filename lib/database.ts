@@ -446,26 +446,52 @@ export async function deleteImage(filename: string): Promise<DatabaseResult<bool
 export function validatePostData(data: Partial<CreatePostInput>): string[] {
   const errors: string[] = []
   
-  if (!data.title || data.title.trim().length === 0) {
-    errors.push('Title is required')
+  // Check if data exists
+  if (!data || typeof data !== 'object') {
+    errors.push('Invalid post data')
+    return errors
   }
   
-  if (!data.description || data.description.trim().length === 0) {
-    errors.push('Description is required')
+  if (!data.title || typeof data.title !== 'string' || data.title.trim().length === 0) {
+    errors.push('Title is required and must be a non-empty string')
+  } else if (data.title.length > 200) {
+    errors.push('Title must be less than 200 characters')
   }
   
-  if (!data.content || data.content.trim().length === 0) {
-    errors.push('Content is required')
+  if (!data.description || typeof data.description !== 'string' || data.description.trim().length === 0) {
+    errors.push('Description is required and must be a non-empty string')
+  } else if (data.description.length > 500) {
+    errors.push('Description must be less than 500 characters')
   }
   
-  if (!data.date) {
-    errors.push('Date is required')
+  if (!data.content || typeof data.content !== 'string' || data.content.trim().length === 0) {
+    errors.push('Content is required and must be a non-empty string')
+  }
+  
+  if (!data.date || typeof data.date !== 'string') {
+    errors.push('Date is required and must be a string')
   } else if (isNaN(Date.parse(data.date))) {
-    errors.push('Invalid date format')
+    errors.push('Invalid date format - must be a valid ISO date string')
   }
   
-  if (!data.tags || data.tags.length === 0) {
+  if (!data.tags || !Array.isArray(data.tags) || data.tags.length === 0) {
     errors.push('At least one tag is required')
+  } else {
+    // Validate each tag
+    for (let i = 0; i < data.tags.length; i++) {
+      if (typeof data.tags[i] !== 'string' || data.tags[i].trim().length === 0) {
+        errors.push(`Tag ${i + 1} must be a non-empty string`)
+      }
+    }
+  }
+  
+  // Validate optional fields if provided
+  if (data.image !== undefined && typeof data.image !== 'string') {
+    errors.push('Image must be a string')
+  }
+  
+  if (data.published !== undefined && typeof data.published !== 'boolean') {
+    errors.push('Published must be a boolean')
   }
   
   return errors

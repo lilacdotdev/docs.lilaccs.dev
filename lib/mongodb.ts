@@ -15,8 +15,8 @@ const options = {
   maxPoolSize: 10, // Maintain up to 10 socket connections
   serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
   socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-  bufferMaxEntries: 0, // Disable mongoose buffering
-  bufferCommands: false, // Disable mongoose buffering
+  connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
+  family: 4, // Use IPv4, skip trying IPv6
 }
 
 let client: MongoClient
@@ -35,7 +35,9 @@ function getClientPromise(): Promise<MongoClient> {
     return global._mongoClientPromise
   } else {
     // In production mode, it's best to not use a global variable.
-    client = new MongoClient(uri, options)
+    if (!client) {
+      client = new MongoClient(uri, options)
+    }
     return client.connect()
   }
 }
@@ -74,20 +76,63 @@ export async function initializeDatabase(): Promise<void> {
     
     // Create indexes for posts collection
     const postsCollection = db.collection('posts')
-    await postsCollection.createIndex({ id: 1 }, { unique: true })
-    await postsCollection.createIndex({ date: -1 })
-    await postsCollection.createIndex({ tags: 1 })
-    await postsCollection.createIndex({ published: 1 })
+    
+    // Create indexes with error handling for each one
+    try {
+      await postsCollection.createIndex({ id: 1 }, { unique: true })
+    } catch (indexError) {
+      if (indexError instanceof Error && !indexError.message.includes('already exists')) {
+        console.warn('Warning creating posts id index:', indexError.message)
+      }
+    }
+    
+    try {
+      await postsCollection.createIndex({ date: -1 })
+    } catch (indexError) {
+      if (indexError instanceof Error && !indexError.message.includes('already exists')) {
+        console.warn('Warning creating posts date index:', indexError.message)
+      }
+    }
+    
+    try {
+      await postsCollection.createIndex({ tags: 1 })
+    } catch (indexError) {
+      if (indexError instanceof Error && !indexError.message.includes('already exists')) {
+        console.warn('Warning creating posts tags index:', indexError.message)
+      }
+    }
+    
+    try {
+      await postsCollection.createIndex({ published: 1 })
+    } catch (indexError) {
+      if (indexError instanceof Error && !indexError.message.includes('already exists')) {
+        console.warn('Warning creating posts published index:', indexError.message)
+      }
+    }
     
     // Create indexes for images collection
     const imagesCollection = db.collection('images')
-    await imagesCollection.createIndex({ filename: 1 }, { unique: true })
-    await imagesCollection.createIndex({ uploadedAt: -1 })
+    
+    try {
+      await imagesCollection.createIndex({ filename: 1 }, { unique: true })
+    } catch (indexError) {
+      if (indexError instanceof Error && !indexError.message.includes('already exists')) {
+        console.warn('Warning creating images filename index:', indexError.message)
+      }
+    }
+    
+    try {
+      await imagesCollection.createIndex({ uploadedAt: -1 })
+    } catch (indexError) {
+      if (indexError instanceof Error && !indexError.message.includes('already exists')) {
+        console.warn('Warning creating images uploadedAt index:', indexError.message)
+      }
+    }
     
     console.log('Database indexes initialized successfully')
   } catch (error) {
     console.error('Error initializing database indexes:', error)
-    // Don't throw error - indexes might already exist
+    // Don't throw error - this shouldn't prevent the app from working
   }
 }
 

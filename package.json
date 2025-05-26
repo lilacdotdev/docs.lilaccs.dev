@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "migrate:mongodb": "node scripts/migrate-to-mongodb.js",
-    "test:mongodb": "node scripts/test-mongodb.js"
+    "test:mongodb": "node scripts/test-mongodb.js",
+    "test:production": "node scripts/test-production-issues.js"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.0",
