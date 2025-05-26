@@ -78,7 +78,7 @@ export function HorizontalRule({ className, ...props }: Omit<TextProps, 'childre
   return (
     <hr
       className={cn(
-        'my-8 border-0 bg-border h-px',
+        'my-8 border-t border-gray-200 dark:border-gray-800',
         className
       )}
       {...props}
