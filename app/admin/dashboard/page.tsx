@@ -122,7 +122,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
+      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black" role="banner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -166,7 +166,9 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <section aria-labelledby="stats-heading" className="mb-8">
+          <h2 id="stats-heading" className="sr-only">Dashboard Statistics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -210,11 +212,12 @@ export default function AdminDashboard() {
               <Tag className="text-black dark:text-white" size={24} />
             </div>
           </motion.div>
-        </div>
+          </div>
+        </section>
 
         {/* Actions */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-black dark:text-white">Posts Management</h1>
+          <h1 id="posts-heading" className="text-2xl font-bold text-black dark:text-white">Posts Management</h1>
           <motion.button
             onClick={() => router.push('/admin/posts/new')}
             className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
@@ -227,12 +230,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* Posts Table */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden"
-        >
+        <section aria-labelledby="posts-heading">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden"
+          >
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-900">
@@ -343,6 +347,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </motion.div>
+        </section>
       </div>
     </div>
   )

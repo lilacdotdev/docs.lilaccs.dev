@@ -99,6 +99,13 @@ export default function ImageUpload({
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleClick()
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* Current Image Preview */}
@@ -107,12 +114,14 @@ export default function ImageUpload({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="relative group"
+          role="img"
+          aria-label={`Preview of uploaded image: ${value}`}
         >
           <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
             {!imageError ? (
               <Image
                 src={value}
-                alt="Preview"
+                alt="Preview of uploaded image"
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -125,7 +134,7 @@ export default function ImageUpload({
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
                 <div className="text-center">
-                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" aria-hidden="true" />
                   <p className="text-sm text-gray-500 dark:text-gray-400">Failed to load image</p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate max-w-[200px]">
                     {value}
@@ -137,12 +146,14 @@ export default function ImageUpload({
             <button
               onClick={handleRemove}
               disabled={disabled || isUploading}
-              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 disabled:opacity-50"
+              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 disabled:opacity-50 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              aria-label="Remove uploaded image"
+              title="Remove image"
             >
-              <X size={16} />
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 truncate">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 truncate" id="image-url">
             {value}
           </p>
         </motion.div>
@@ -158,30 +169,36 @@ export default function ImageUpload({
           }
           ${disabled || isUploading 
             ? 'opacity-50 cursor-not-allowed' 
-            : 'hover:border-gray-400 dark:hover:border-gray-600 cursor-pointer'
+            : 'hover:border-gray-400 dark:hover:border-gray-600 cursor-pointer focus-within:border-black dark:focus-within:border-white'
           }
         `}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         whileHover={disabled || isUploading ? {} : { scale: 1.01 }}
         whileTap={disabled || isUploading ? {} : { scale: 0.99 }}
+        role="button"
+        tabIndex={disabled || isUploading ? -1 : 0}
+        aria-label={value ? 'Click or drag to replace image' : 'Click or drag to upload image'}
+        aria-describedby="upload-instructions"
       >
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           onChange={handleFileInputChange}
-          className="hidden"
+          className="sr-only"
           disabled={disabled || isUploading}
+          aria-label="Choose image file"
         />
 
         <div className="flex flex-col items-center gap-3">
           {isUploading ? (
-            <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-gray-400 animate-spin" aria-hidden="true" />
           ) : (
-            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full">
+            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full" aria-hidden="true">
               {value ? (
                 <ImageIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
               ) : (
@@ -199,10 +216,17 @@ export default function ImageUpload({
                   : 'Click or drag to upload image'
               }
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1" id="upload-instructions">
               PNG, JPG, WebP or GIF up to 5MB
             </p>
           </div>
+        </div>
+
+        {/* Screen reader only status */}
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {isUploading && 'Image is uploading, please wait'}
+          {imageError && 'Image failed to load'}
+          {value && !isUploading && !imageError && 'Image uploaded successfully'}
         </div>
       </motion.div>
 
