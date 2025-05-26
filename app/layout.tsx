@@ -1,18 +1,17 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Providers } from "./providers";
+import { RootLayout } from "@/components/layout/root-layout";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "docs.purple - Developer Blog",
-  description: "A futuristic developer blog by Purple",
-    generator: 'v0.dev'
-}
+  title: "Lilac Documentation",
+  description: "Technical documentation and blog for Lilac",
+};
 
-export default function RootLayout({
+export default function Layout({
   children,
 }: {
   children: React.ReactNode
@@ -20,8 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <Providers>
+          <RootLayout>{children}</RootLayout>
+        </Providers>
       </body>
     </html>
-  )
+  );
 }
